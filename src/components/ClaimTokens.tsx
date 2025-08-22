@@ -14,7 +14,11 @@ import {
 } from "@solana/spl-token";
 import { AnchorProvider, Idl, Program, Wallet } from "@coral-xyz/anchor";
 import idlTokenVesting from "../assets/token_vesting.json";
+import { Buffer } from "buffer";
 
+if (!window.Buffer) {
+    window.Buffer = Buffer;
+}
 const MINT = new PublicKey(import.meta.env.VITE_TOKEN_MINT);
 
 const PROGRAM_ID = new PublicKey(import.meta.env.VITE_PROGRAM_ID);
@@ -53,11 +57,9 @@ const ClaimToken: React.FC = () => {
 
             if (!myVesting) {
                 setIsAveliableClaim(true);
-                console.warn("⚠️ Вестинг не знайдено");
                 return;
             }
 
-            console.log("✅ Знайшли вестинг:", myVesting.publicKey.toBase58());
             setCompanyName(myVesting.account.companyName);
             setIsAveliableClaim(false);
         }, 2000), // 2 секунди після зупинки вводу
@@ -143,7 +145,7 @@ const ClaimToken: React.FC = () => {
                 .rpc();
 
             console.log("✅ Claim success:", sig);
-            alert(`✅ Claim success! Tx: https://explorer.solana.com/tx/${sig}?cluster=devnet`);
+            alert(`✅ Claim success! Tx: https://explorer.solana.com/tx/${sig}?cluster=${import.meta.env.VITE_CLUSTER}`);
         } catch (err: any) {
             console.error("❌ Claim error:", err);
             alert(`❌ Claim failed: ${err.message}`);
