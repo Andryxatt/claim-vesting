@@ -8,7 +8,7 @@ import {
     SystemProgram,
 } from "@solana/web3.js";
 import {
-    TOKEN_2022_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
     ASSOCIATED_TOKEN_PROGRAM_ID,
     getAssociatedTokenAddress,
 } from "@solana/spl-token";
@@ -43,15 +43,13 @@ const ClaimToken: React.FC = () => {
             });
 
             const program = new Program(idlTokenVesting as Idl, provider);
-            // 1. Витягуємо всі вестинг акаунти
             const vestings = await (program.account as any).vestingAccount.all();
-            // 2. Перевіряємо чи value схоже на адресу (base58)
             let myVesting: any;
             try {
-                const pubkey = new PublicKey(value); // якщо помилка → значить це не адреса
+                const pubkey = new PublicKey(value); 
                 myVesting = vestings.find((v: any) => v.publicKey.equals(pubkey));
             } catch (e) {
-                // 3. Якщо не адреса → шукаємо по companyName (seed)
+                
                 myVesting = vestings.find((v: any) => v.account.companyName === value);
             }
 
@@ -62,7 +60,7 @@ const ClaimToken: React.FC = () => {
 
             setCompanyName(myVesting.account.companyName);
             setIsAveliableClaim(false);
-        }, 2000), // 2 секунди після зупинки вводу
+        }, 1000), 
         [walletProvider, connection, address]
     );
     const claimTokens = async () => {
@@ -103,7 +101,7 @@ const ClaimToken: React.FC = () => {
                 MINT,
                 beneficiary,
                 false,
-                TOKEN_2022_PROGRAM_ID,
+                TOKEN_PROGRAM_ID,
                 ASSOCIATED_TOKEN_PROGRAM_ID
             );
             console.log("🔑 VestingAccount:", vestingAccount.toBase58());
@@ -119,7 +117,7 @@ const ClaimToken: React.FC = () => {
                     MINT,
                     treasuryTokenAccountPda,
                     employeeTokenAccount: ata,
-                    tokenProgram: TOKEN_2022_PROGRAM_ID,
+                    tokenProgram: TOKEN_PROGRAM_ID,
                     associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
                     systemProgram: SystemProgram.programId,
                 })
