@@ -68,7 +68,7 @@ const ClaimToken: React.FC = () => {
     const claimTokens = async () => {
         try {
             if (!walletProvider || !connection || !address) {
-                console.error("❌ Wallet not connected");
+                console.error("❌ Wallet not connected"); 
                 return;
             }
 
@@ -79,31 +79,12 @@ const ClaimToken: React.FC = () => {
             const program = new Program(idlTokenVesting as Idl, provider);
 
             const beneficiary = new PublicKey(address);
-            // 1. Витягуємо всі вестинг акаунти
-            const vestings = await (program.account as any).vestingAccount.all();
+           
 
-            // 2. Шукаємо вестинг, до якого прив’язаний цей beneficiary
-            // (можеш фільтрувати по companyName або іншому полі, що є у твоєму vestingAccount)
-            const myVesting = vestings.find((v: any) =>
-                v.account.companyName === companyName // або твоя умова
+            const [vestingAccount] = PublicKey.findProgramAddressSync(
+                [Buffer.from(companyName)],
+                program.programId
             );
-            console.log(vestings)
-            if (!myVesting) {
-
-                throw new Error("Вестинг для цього користувача не знайдено");
-            }
-
-            const vestingAccount = myVesting.publicKey;
-            // const [vestingAccountPda] = PublicKey.findProgramAddressSync(
-            //     [Buffer.from(companyName)],
-            //     PROGRAM_ID
-            // );
-
-
-            // const [vestingAccount] = PublicKey.findProgramAddressSync(
-            //     [Buffer.from(companyName)],
-            //     program.programId
-            // );
             const [employeeAccountPda] = PublicKey.findProgramAddressSync(
                 [
                     Buffer.from("employee_vesting"),
@@ -113,7 +94,7 @@ const ClaimToken: React.FC = () => {
                 PROGRAM_ID
             );
             const [treasuryTokenAccountPda] = PublicKey.findProgramAddressSync(
-                [Buffer.from("vesting_treasury"), Buffer.from(myVesting.account.companyName)],
+                [Buffer.from("vesting_treasury"), Buffer.from(companyName)],
                 PROGRAM_ID
             );
 
@@ -130,7 +111,7 @@ const ClaimToken: React.FC = () => {
             console.log("🔑 TreasuryTokenAccount:", treasuryTokenAccountPda.toBase58());
 
             const sig = await program.methods
-                .claimTokens(myVesting.account.companyName) // передаємо з акаунта, а не хардкод
+                .claimTokens(companyName) // передаємо з акаунта, а не хардкод
                 .accounts({
                     beneficiary,
                     employeeAccount: employeeAccountPda,
