@@ -46,10 +46,10 @@ const ClaimToken: React.FC = () => {
             const vestings = await (program.account as any).vestingAccount.all();
             let myVesting: any;
             try {
-                const pubkey = new PublicKey(value); 
+                const pubkey = new PublicKey(value);
                 myVesting = vestings.find((v: any) => v.publicKey.equals(pubkey));
             } catch (e) {
-                
+
                 myVesting = vestings.find((v: any) => v.account.companyName === value);
             }
 
@@ -60,13 +60,13 @@ const ClaimToken: React.FC = () => {
 
             setCompanyName(myVesting.account.companyName);
             setIsAveliableClaim(false);
-        }, 1000), 
+        }, 1000), // 2 секунди після зупинки вводу
         [walletProvider, connection, address]
     );
     const claimTokens = async () => {
         try {
             if (!walletProvider || !connection || !address) {
-                console.error("❌ Wallet not connected"); 
+                console.error("❌ Wallet not connected");
                 return;
             }
 
@@ -77,7 +77,7 @@ const ClaimToken: React.FC = () => {
             const program = new Program(idlTokenVesting as Idl, provider);
 
             const beneficiary = new PublicKey(address);
-           
+
 
             const [vestingAccount] = PublicKey.findProgramAddressSync(
                 [Buffer.from(companyName)],
@@ -96,7 +96,8 @@ const ClaimToken: React.FC = () => {
                 PROGRAM_ID
             );
 
-
+            const treasuryBalance = await connection.getTokenAccountBalance(treasuryTokenAccountPda);
+            console.log("Treasury balance:", treasuryBalance.value.uiAmount);
             const ata = await getAssociatedTokenAddress(
                 MINT,
                 beneficiary,
@@ -130,7 +131,6 @@ const ClaimToken: React.FC = () => {
             alert(`❌ Claim failed: ${err.message}`);
         }
     };
-
     return (
         <div className="space-y-4">
             <h2 className="text-lg font-semibold">Claim Tokens</h2>
