@@ -43,12 +43,15 @@ const ClaimToken: React.FC = () => {
             });
 
             const program = new Program(idlTokenVesting as Idl, provider);
+            // 1. Витягуємо всі вестинг акаунти
             const vestings = await (program.account as any).vestingAccount.all();
+            // 2. Перевіряємо чи value схоже на адресу (base58)
             let myVesting: any;
             try {
                 const pubkey = new PublicKey(value);
                 myVesting = vestings.find((v: any) => v.publicKey.equals(pubkey));
             } catch (e) {
+                // 3. Якщо не адреса → шукаємо по companyName (seed)
 
                 myVesting = vestings.find((v: any) => v.account.companyName === value);
             }
@@ -60,9 +63,10 @@ const ClaimToken: React.FC = () => {
 
             setCompanyName(myVesting.account.companyName);
             setIsAveliableClaim(false);
-        }, 1000), // 2 секунди після зупинки вводу
+        }, 1000),
         [walletProvider, connection, address]
     );
+    
     const claimTokens = async () => {
         try {
             if (!walletProvider || !connection || !address) {
@@ -77,12 +81,21 @@ const ClaimToken: React.FC = () => {
             const program = new Program(idlTokenVesting as Idl, provider);
 
             const beneficiary = new PublicKey(address);
+            // 1. Витягуємо всі вестинг акаунти
+            const vestings = await (program.account as any).vestingAccount.all();
 
 
-            const [vestingAccount] = PublicKey.findProgramAddressSync(
-                [Buffer.from(companyName)],
-                program.programId
+            // 2. Шукаємо вестинг, до якого прив’язаний цей beneficiary
+            const myVesting = vestings.find((v: any) =>
+                v.account.companyName === companyName // або твоя умова
             );
+            console.log(vestings)
+            if (!myVesting) {
+                throw new Error("Вестинг для цього користувача не знайдено");
+            }
+
+            const vestingAccount = myVesting.publicKey;
+
             const [employeeAccountPda] = PublicKey.findProgramAddressSync(
                 [
                     Buffer.from("employee_vesting"),
@@ -96,8 +109,6 @@ const ClaimToken: React.FC = () => {
                 PROGRAM_ID
             );
 
-            const treasuryBalance = await connection.getTokenAccountBalance(treasuryTokenAccountPda);
-            console.log("Treasury balance:", treasuryBalance.value.uiAmount);
             const ata = await getAssociatedTokenAddress(
                 MINT,
                 beneficiary,
@@ -131,6 +142,7 @@ const ClaimToken: React.FC = () => {
             alert(`❌ Claim failed: ${err.message}`);
         }
     };
+
     return (
         <div className="space-y-4">
             <h2 className="text-lg font-semibold">Claim Tokens</h2>
