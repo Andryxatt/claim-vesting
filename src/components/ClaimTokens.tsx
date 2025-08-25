@@ -12,6 +12,9 @@ import {
 import { AnchorProvider, Idl, Program, Wallet, BN } from "@coral-xyz/anchor";
 import idlTokenVesting from "../assets/token_vesting.json";
 import { Buffer } from "buffer";
+import CustomButton from "./CustomButton";
+import { showError } from "./notifications/Error";
+import { showSuccess } from "./notifications/Success";
 
 if (!window.Buffer) {
   window.Buffer = Buffer;
@@ -66,11 +69,15 @@ const ClaimToken: React.FC = () => {
         setIsAvailableClaim(true);
         setClaimable(0);
         setClaimed(0);
+        showError("No vesting account found for this companyName");
         return;
       }
+      else {
+        setCompanyName(myVesting.account.companyName);
+        setIsAvailableClaim(false);
+      }
 
-      setCompanyName(myVesting.account.companyName);
-      setIsAvailableClaim(false);
+
 
       try {
         const beneficiary = new PublicKey(address);
@@ -155,40 +162,34 @@ const ClaimToken: React.FC = () => {
         })
         .rpc();
 
-      alert(`✅ Claim success! Tx: https://explorer.solana.com/tx/${sig}?cluster=${import.meta.env.VITE_CLUSTER}`);
+      showSuccess(sig);
     } catch (err: any) {
       console.error("❌ Claim error:", err);
-      alert(`❌ Claim failed: ${err.message}`);
+      showError(err.message || "Transaction failed");
     }
   };
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Claim Tokens</h2>
-      <div>
-        <label>Search by seeds (companyName)</label>
-        <input
-          placeholder="Enter companyName seed"
-          className="border p-2 rounded-md"
-          type="text"
-          onChange={(e) => onChangeSearch(e.target.value)}
-        />
+    <div className="space-y-4 p-4 border rounded-md shadow-md max-w-md w-full flex flex-col">
+      <h2 className="text-xl font-semibold">Claim Tokens</h2>
+      <div className="flex gap-1 flex-col">
+        <label>Company Name</label>
+        <input className="border p-2 rounded-md" type="text" placeholder="Enter companyName seed" onChange={(e) => onChangeSearch(e.target.value)} />
       </div>
 
       <div className="p-2 bg-gray-100 rounded-md">
         Available for claim: <b>{claimable / 10 ** decimals}</b> {symbol}
       </div>
-      <div>
+      <div className="p-2 bg-gray-100 rounded-md">
         Already claimed: <b>{claimed / 10 ** decimals}</b> {symbol}
       </div>
-
-      <button
+      <CustomButton
+        restClasses="w-full self-right"
         disabled={isAvailableClaim || claimable <= 0}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+        text="Claim"
         onClick={claimTokens}
-      >
-        Claim
-      </button>
+        tooltipText={isAvailableClaim ? "No vesting account found for this companyName" : claimable <= 0 ? "No tokens available to claim" : undefined}
+      />
     </div>
   );
 };

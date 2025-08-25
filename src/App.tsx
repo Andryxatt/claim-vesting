@@ -9,7 +9,7 @@ import ClaimToken from './components/ClaimTokens'
 createAppKit({
   projectId,
   metadata,
-  themeMode: 'light',
+  themeMode: 'dark', // light | dark
   networks: [solana, solanaTestnet, solanaDevnet],
   adapters: [solanaWeb3JsAdapter],
   features: {
@@ -24,11 +24,9 @@ export function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-  
-      <h2>Claim Vesting Tokens</h2>
+
       <appkit-button />
-      {/* <ActionButtonList sendHash={receiveHash} sendSignMsg={receiveSignedMsg} sendBalance={receivebalance}/> */}
-    <ClaimToken />
+      <ClaimToken />
     </div>
   )
 }
